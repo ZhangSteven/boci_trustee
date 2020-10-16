@@ -138,7 +138,7 @@ def bociTrade(blpTrade):
 	, 'SalesTax': ''
 	, 'HongKongCCASSFee': ''
 	, 'TradeReferenceNumber': blpTrade['Tkt #']
-	, 'BrokerCode': getBrokerCode(blpTrade['FACC Long Name'])
+	, 'BrokerCode': getBrokerCode(blpTrade['FACC Short Name'])
 	, 'BrokerName': blpTrade['FACC Long Name']
 	}
 
