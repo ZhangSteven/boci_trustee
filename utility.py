@@ -80,3 +80,9 @@ def getMailServer():
 def getMailTimeout():
 	global config
 	return float(config['email']['timeout'])
+
+
+
+def getBrokerSSIFile():
+	global config
+	return config['other']['brokerSSIFile']

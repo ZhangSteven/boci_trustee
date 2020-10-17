@@ -5,9 +5,9 @@
 # 
 from boci_trustee.utility import getInputDirectory, getOutputDirectory\
 						, getMailSender, getMailRecipients, getMailServer\
-						, getMailTimeout
+						, getMailTimeout, getBrokerSSIFile, getCurrentDir
 from toolz.functoolz import compose
-from functools import partial
+from functools import partial, lru_cache
 from utils.file import getFiles
 from utils.mail import sendMail
 from utils.utility import writeCsv, fromExcelOrdinal
@@ -89,7 +89,8 @@ def getBlpTradesFromFile(inputFile):
 """
 getAccountNumber = lambda fundName: \
 	{ '40019': '12345678'
-	, '19437-A': '888888'
+	, '19437-A': '19437A'	# for testing only
+	, '19437-B': '19437B'	# for testing only
 	}[fundName]
 
 
@@ -100,7 +101,17 @@ def getBrokerCode(brokerName):
 
 	Map the broker code to broker SSI code
 	"""
-	return '12885'
+	@lru_cache(maxsize=3)
+	def getBrokerSSIMapping(file):
+		return dict(loadBrokerSSIMappingFromFile(file))
+
+
+	return getBrokerSSIMapping(getBrokerSSIFile())[brokerName]
+
+
+
+toStringIfFloat = lambda x: \
+	str(int(x)) if isinstance(x, float) else x
 
 
 
@@ -119,7 +130,7 @@ def bociTrade(blpTrade):
 
 
 	return \
-	{ 'Account': getAccountNumber(blpTrade['Fund'])
+	{ 'Account': getAccountNumber(toStringIfFloat(blpTrade['Fund']))
 	, 'SEDOL': blpTrade['Sedol']
 	, 'ISIN': blpTrade['ISIN']
 	, 'Name': blpTrade['Shrt Name']
@@ -141,6 +152,28 @@ def bociTrade(blpTrade):
 	, 'BrokerCode': getBrokerCode(blpTrade['FACC Short Name'])
 	, 'BrokerName': blpTrade['FACC Long Name']
 	}
+
+
+
+@lru_cache(maxsize=3)
+def loadBrokerSSIMappingFromFile(file):
+	"""
+	[String] broker SSI mapping file 
+		=> [List] (sub broker ID, broker SSI)
+	"""
+	def skipOneLine(lines):
+		pop(lines)
+		return lines
+
+
+	return \
+	compose(
+		list
+	  , partial(map, lambda line: (line[0].strip(), toStringIfFloat(line[-1])))
+	  , skipOneLine
+	  , fileToLines
+  	  , partial(join, getCurrentDir(),'reference')
+	)(file)
 
 
 
