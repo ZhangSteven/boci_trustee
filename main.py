@@ -110,6 +110,36 @@ def getBrokerCode(brokerName):
 
 
 
+def duplidateItems(L):
+	"""
+	[Iterator] L => [Set] duplicate items
+
+	Go through the items in L, find whether there are duplicates and return
+	all items that are duplicated at least once in a set.
+	"""
+	uniqueItems = set()
+	duplicates = set()
+	for x in L:
+		if x in uniqueItems:
+			duplicates.add(x)
+		else:
+			uniqueItems.add(x)
+
+	return duplicates
+
+
+
+@lru_cache(maxsize=3)
+def getBrokerWithMoreThanOneSSI(file):
+	return \
+	compose(
+		duplidateItems
+	  , partial(map, lambda el: el[0])
+	  , loadBrokerSSIMappingFromFile
+	)(file)
+
+
+
 toStringIfFloat = lambda x: \
 	str(int(x)) if isinstance(x, float) else x
 
@@ -172,7 +202,7 @@ def loadBrokerSSIMappingFromFile(file):
 	  , partial(map, lambda line: (line[0].strip(), toStringIfFloat(line[-1])))
 	  , skipOneLine
 	  , fileToLines
-  	  , partial(join, getCurrentDir(),'reference')
+  	  , partial(join, getCurrentDir(), 'reference')
 	)(file)
 
 
