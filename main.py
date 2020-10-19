@@ -122,7 +122,7 @@ def duplidateItems(L):
 
 
 @lru_cache(maxsize=3)
-def getBrokerWithMoreThanOneSSI(file):
+def getBrokerWithMultipleSSI(file):
 	return \
 	compose(
 		duplidateItems
@@ -173,6 +173,9 @@ def bociTrade(blpTrade):
 	, 'TradeReferenceNumber': toStringIfFloat(blpTrade['Tkt #'])
 	, 'BrokerCode': getBrokerCode(blpTrade['FACC Short Name'])
 	, 'BrokerName': blpTrade['FACC Long Name']
+	
+	, 'BrokerShortName': blpTrade['FACC Short Name'] # to detect multiple SSI
+													 # not for output to BOCI
 	}
 
 
@@ -201,6 +204,20 @@ def loadBrokerSSIMappingFromFile(file):
 
 convert = lambda inputFile: \
 	map(bociTrade, getBlpTradesFromFile(inputFile))
+
+
+
+def getTradeWithMultipleSSI(trades):
+	"""
+	[Iterator] trades (boci format) => [List] reference number of trades whose
+		broker has multiple SSI codes.
+	"""
+	withMultipleSSI = lambda t: \
+		t['BrokerShortName'] in getBrokerWithMultipleSSI(getBrokerSSIFile())
+
+
+	return list(map( lambda t: t['TradeReferenceNumber']
+				   , filter(withMultipleSSI, trades)))
 
 
 
