@@ -53,14 +53,6 @@ def getInputFile():
 
 
 
-def getOutputHeaders():
-	return [ 'Account', 'SEDOL', 'ISIN', 'Name', 'TranType', 'Quantity', 'TradeDate'
-		   , 'SettlementDate', 'Currency', 'Price', 'AccurredInterest', 'SettlementAmount'
-		   , 'Commission', 'StampDuty', 'TransactionLevy', 'ClearingFee', 'SalesTax'
-		   , 'HongKongCCASSFee', 'TradeReferenceNumber', 'BrokerCode', 'BrokerName']
-
-
-
 def getBlpTradesFromFile(inputFile):
 	"""
 	[String] inputFile => [Iterable] trades from Bloomberg
@@ -178,7 +170,7 @@ def bociTrade(blpTrade):
 	, 'ClearingFee': ''
 	, 'SalesTax': ''
 	, 'HongKongCCASSFee': ''
-	, 'TradeReferenceNumber': blpTrade['Tkt #']
+	, 'TradeReferenceNumber': toStringIfFloat(blpTrade['Tkt #'])
 	, 'BrokerCode': getBrokerCode(blpTrade['FACC Short Name'])
 	, 'BrokerName': blpTrade['FACC Long Name']
 	}
@@ -207,7 +199,12 @@ def loadBrokerSSIMappingFromFile(file):
 
 
 
-def convert(inputFile, outputDirectory):
+convert = lambda inputFile: \
+	map(bociTrade, getBlpTradesFromFile(inputFile))
+
+
+
+def output(inputFile, outputDirectory):
 	"""
 	[String] inputFile
 	[String] outputDirectory
@@ -215,13 +212,20 @@ def convert(inputFile, outputDirectory):
 
 	Convert the input file to output file, then return its file name.
 	"""
+	outputHeaders = \
+	[ 'Account', 'SEDOL', 'ISIN', 'Name', 'TranType', 'Quantity', 'TradeDate'
+	, 'SettlementDate', 'Currency', 'Price', 'AccurredInterest', 'SettlementAmount'
+	, 'Commission', 'StampDuty', 'TransactionLevy', 'ClearingFee', 'SalesTax'
+	, 'HongKongCCASSFee', 'TradeReferenceNumber', 'BrokerCode', 'BrokerName']
+
+
 	dictToValues = lambda d: \
-		map(lambda h: d.get(h, ''), getOutputHeaders())
+		map(lambda h: d.get(h, ''), outputHeaders)
 
 
 	return writeCsv( join(getOutputDirectory(), 'output.csv')
-				   , map( dictToValues
-				   		, map(bociTrade, getBlpTradesFromFile(inputFile))))
+				   , map(dictToValues, convert(inputFile)))
+
 
 
 
@@ -241,8 +245,8 @@ if __name__ == '__main__':
 	try:
 		inputFile = getInputFile()
 		sendNotification( 'Successfully converted BOCI-Prudential trade file'
-						, convert( join(getInputDirectory(), inputFile)
-								 , getOutputDirectory()))
+						, output( join(getInputDirectory(), inputFile)
+								, getOutputDirectory()))
 
 		# shutil.move( join(getInputDirectory(), inputFile)
 		# 		   , join(getInputDirectory(), 'processed', inputFile))
