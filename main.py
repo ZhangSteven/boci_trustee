@@ -8,6 +8,7 @@ from boci_trustee.utility import getInputDirectory, getOutputDirectory\
 						, getMailTimeout, getBrokerSSIFile, getCurrentDir
 from toolz.functoolz import compose
 from functools import partial, lru_cache
+from itertools import dropwhile
 from utils.file import getFiles
 from utils.mail import sendMail
 from utils.utility import writeCsv, fromExcelOrdinal
@@ -36,7 +37,6 @@ def sendNotification(tradeWithMultipleSSI, outputFile):
 	# sendMail( body, subject, getMailSender(), getMailRecipients()\
 	# 		, getMailServer(), getMailTimeout())
 	print('send mail:', subject, body) # for debugging only
-
 
 
 
@@ -74,6 +74,7 @@ def getBlpTradesFromFile(inputFile):
 	return \
 	compose(
 		getRawPositions
+	  , partial(dropwhile, lambda L: len(L) == 0 or L[0] == '')
 	  , skipFirst2Lines
 	  , fileToLines
 	)(inputFile)
@@ -172,7 +173,7 @@ def bociTrade(blpTrade):
 	, 'Price': blpTrade['Price']
 	, 'AccurredInterest': blpTrade['Accr Int']
 	, 'SettlementAmount': blpTrade['Settle Amount']
-	, 'Commission': blpTrade['Misc Fee']
+	, 'Commission': 0
 	, 'StampDuty': ''
 	, 'TransactionLevy': ''
 	, 'ClearingFee': ''
