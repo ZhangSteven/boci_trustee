@@ -20,15 +20,23 @@ logger = logging.getLogger(__name__)
 
 
 
-def sendNotification(subject, body):
+def sendNotification(tradeWithMultipleSSI, outputFile):
 	"""
 	input: [String] subject (email subject), [String] body (email body)
 	
 	side effect: send notification email to recipients with the subject and body.
 	"""
+	subject = 'Successfully converted BOCI-Prudential trade file' \
+				if tradeWithMultipleSSI == [] else \
+				'Warning: BOCI-Prudential trade file: Broker with Muitple SSI'
+
+	body = outputFile if tradeWithMultipleSSI == [] else \
+				'\n'.join([outputFile] + tradeWithMultipleSSI)
+
 	# sendMail( body, subject, getMailSender(), getMailRecipients()\
 	# 		, getMailServer(), getMailTimeout())
 	print('send mail:', subject, body) # for debugging only
+
 
 
 
@@ -173,7 +181,7 @@ def bociTrade(blpTrade):
 	, 'TradeReferenceNumber': toStringIfFloat(blpTrade['Tkt #'])
 	, 'BrokerCode': getBrokerCode(blpTrade['FACC Short Name'])
 	, 'BrokerName': blpTrade['FACC Long Name']
-	
+
 	, 'BrokerShortName': blpTrade['FACC Short Name'] # to detect multiple SSI
 													 # not for output to BOCI
 	}
@@ -221,13 +229,13 @@ def getTradeWithMultipleSSI(trades):
 
 
 
-def output(inputFile, outputDirectory):
+def output(trades, outputDirectory):
 	"""
-	[String] inputFile
+	[Iterator] trades
 	[String] outputDirectory
 		=> [String] outputFile
 
-	Convert the input file to output file, then return its file name.
+	Write BOCI trades to output file, then return its file name.
 	"""
 	outputHeaders = \
 	[ 'Account', 'SEDOL', 'ISIN', 'Name', 'TranType', 'Quantity', 'TradeDate'
@@ -241,7 +249,7 @@ def output(inputFile, outputDirectory):
 
 
 	return writeCsv( join(getOutputDirectory(), 'output.csv')
-				   , map(dictToValues, convert(inputFile)))
+				   , map(dictToValues, trades))
 
 
 
@@ -261,9 +269,9 @@ if __name__ == '__main__':
 	logger.debug('main: start')
 	try:
 		inputFile = getInputFile()
-		sendNotification( 'Successfully converted BOCI-Prudential trade file'
-						, output( join(getInputDirectory(), inputFile)
-								, getOutputDirectory()))
+		trades = list(convert(join(getInputDirectory(), inputFile)))
+		sendNotification( getTradeWithMultipleSSI(trades)
+						, output(trades, getOutputDirectory()))
 
 		# shutil.move( join(getInputDirectory(), inputFile)
 		# 		   , join(getInputDirectory(), 'processed', inputFile))
