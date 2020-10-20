@@ -89,7 +89,8 @@ def getBlpTradesFromFile(inputFile):
 	FIXME: find the BOCI trustee's account number
 """
 getAccountNumber = lambda fundName: \
-	{ '40019': '12345678'
+	{ '60001': 'CLAMC STBD'
+	, '40019': '12345678'	# for testing only
 	, '19437-A': '19437A'	# for testing only
 	, '19437-B': '19437B'	# for testing only
 	}[fundName]
