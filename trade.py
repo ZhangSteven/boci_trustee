@@ -61,16 +61,17 @@ def getInputFile():
 
 
 
+def skipFirst2Lines(lines):
+	pop(lines)
+	pop(lines)
+	return lines
+
+
+
 def getBlpTradesFromFile(inputFile):
 	"""
 	[String] inputFile => [Iterable] trades from Bloomberg
 	"""
-	def skipFirst2Lines(lines):
-		pop(lines)
-		pop(lines)
-		return lines
-
-
 	return \
 	compose(
 		getRawPositions
@@ -90,6 +91,7 @@ def getBlpTradesFromFile(inputFile):
 """
 getAccountNumber = lambda fundName: \
 	{ '60001': 'CLAMC STBD'
+	, '40017-B': '666666'	# for testing only
 	, '40019': '12345678'	# for testing only
 	, '19437-A': '19437A'	# for testing only
 	, '19437-B': '19437B'	# for testing only
