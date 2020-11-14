@@ -44,7 +44,9 @@ def processTrade(inputDir, outputDir):
 		trades, tradesWithMultipleSSI = \
 			getBociTrades(fileToLines(join(inputDir, inputFile)))
 
-		outputFile = output(trades, getTradeCsvHeaders(), join(outputDir, 'tradeOutput.csv'))
+		outputFile = output( trades
+						   , getTradeCsvHeaders()
+						   , join(outputDir, changeFileExtension(inputFile)))
 
 		shutil.move( join(inputDir, inputFile)
 				   , join(inputDir, 'processed', inputFile))
@@ -84,7 +86,7 @@ def processRepo(inputDir, outputDir):
 
 		outputFile = output( getRepoTrades(fileToLines(join(inputDir, inputFile)))
 						   , getRepoCsvHeaders()
-						   , join(outputDir, 'repoOutput.csv'))
+						   , join(outputDir, changeFileExtension(inputFile)))
 
 		shutil.move( join(inputDir, inputFile)
 				   , join(inputDir, 'processed', inputFile))
@@ -120,6 +122,17 @@ def sendNotification(messageTuple1, messageTuple2):
 	# 		, getMailServer(), getMailTimeout())
 
 	print('send mail:', subject, body) # for debugging only
+
+
+
+def changeFileExtension(filename):
+	L = filename.split('.')
+	if len(L) < 2:
+		logger.error('changeFileExtension(): invalid filename {0}'.format(filename))
+		raise ValueError
+
+	return '.'.join(L[0:-1] + ['csv'])
+
 
 
 
