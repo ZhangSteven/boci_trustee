@@ -3,21 +3,23 @@
 
 import unittest2
 from boci_trustee.utility import getCurrentDir
-from boci_trustee.main import convert, getTradeWithMultipleSSI
+from boci_trustee.main import getBociTrades
+from utils.excel import fileToLines
 from os.path import join
 
 
 
-class TestALL(unittest2.TestCase):
+class TestTrade(unittest2.TestCase):
 
 	def __init__(self, *args, **kwargs):
-		super(TestALL, self).__init__(*args, **kwargs)
+		super(TestTrade, self).__init__(*args, **kwargs)
 
 
 
-	def test_convert(self):
+	def testTrade1(self):
 		inputFile = join(getCurrentDir(), 'samples', 'sample_trade1.xlsx')
-		t = list(convert(inputFile))[1]
+		trades, _ = getBociTrades(fileToLines(inputFile))
+		t = list(trades)[1]
 		self.assertEqual('12345678', t['Account'])
 		self.assertEqual('BK5JS96', t['SEDOL'])
 		self.assertEqual('XS1813551584', t['ISIN'])
@@ -42,7 +44,7 @@ class TestALL(unittest2.TestCase):
 
 
 
-	def test_multipleSSI(self):
+	def testTrade2(self):
 		inputFile = join(getCurrentDir(), 'samples', 'sample_trade2.xlsx')
-		L = getTradeWithMultipleSSI(convert(inputFile))
-		self.assertEqual(['281305', '282617', '283003'], L)
+		_, tradesWithMultipleSSI = getBociTrades(fileToLines(inputFile))
+		self.assertEqual(['281305', '282617', '283003'], tradesWithMultipleSSI)
