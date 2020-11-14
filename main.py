@@ -97,21 +97,28 @@ def processRepo(inputDir, outputDir):
 
 
 
-def sendNotification(tradeWithMultipleSSI, outputFile):
+def sendNotification(messageTuple1, messageTuple2):
 	"""
-	input: [String] subject (email subject), [String] body (email body)
+	[Tuple] (status code, message)
+	[Tuple] (status code, message)
+	=> no return value
 	
-	side effect: send notification email to recipients with the subject and body.
+	side effect: send notification email to recipients.
 	"""
-	subject = 'Successfully converted BOCI-Prudential trade file' \
-				if tradeWithMultipleSSI == [] else \
-				'Warning: BOCI-Prudential trade file: Broker with Muitple SSI'
+	status01, message01 = messageTuple1
+	status02, message02 = messageTuple2
 
-	body = outputFile if tradeWithMultipleSSI == [] else \
-				'\n'.join([outputFile] + tradeWithMultipleSSI)
+	subject = 'Successful: 60001 trade and repo file conversion' \
+				if (status01, status02) == (0, 0) else \
+				'Warning: 60001 trade and repo file conversion: Broker with Muitple SSI' \
+				if (status01, status02) in [(0, 1), (1, 0)] else \
+				'Error: 60001 trade and repo file conversion'
+
+	body = message01 + '\n\n' + message02
 
 	# sendMail( body, subject, getMailSender(), getMailRecipients()\
 	# 		, getMailServer(), getMailTimeout())
+
 	print('send mail:', subject, body) # for debugging only
 
 
@@ -164,13 +171,12 @@ if __name__ == '__main__':
 	logging.config.fileConfig('logging.config', disable_existing_loggers=False)
 
 	"""
-	Do the following:
+	1. Search for trade and repo file in the input directory;
+	2. Process them and save the results to csv files;
+	3. Send notification email.
 
-	1. Convert the input file to output csv file.
-	2. Send notification email.
-	3. Move the input file to 'processed' sub directory.
 	"""
 	logger.debug('main:')
 
-	print(processTrade(getInputDirectory(), getOutputDirectory()))
-	print(processRepo(getInputDirectory(), getOutputDirectory()))
+	sendNotification( processTrade(getInputDirectory(), getOutputDirectory())
+					, processRepo(getInputDirectory(), getOutputDirectory()))
