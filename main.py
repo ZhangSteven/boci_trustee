@@ -7,6 +7,7 @@ from boci_trustee.utility import getInputDirectory, getOutputDirectory\
 						, getMailSender, getMailRecipients, getMailServer\
 						, getMailTimeout, getCurrentDir
 from boci_trustee.trade import getBociTrades, getTradeCsvHeaders
+from boci_trustee.repo import getRepoTrades, getRepoCsvHeaders
 from toolz.functoolz import compose
 from functools import partial
 from utils.file import getFiles
@@ -30,7 +31,7 @@ def processTrade(inputDir, outputDir):
 	(1) move the input file to another directory if processing successful;
 	(2) produce an output csv file in the output directory;
 
-	status code: 0:successful, 1:warning, 2:error
+	status code: 0:successful, 1:warning, -1:error
 	"""
 	logger.debug('processTrade(): {0}'.format(inputDir))
 
@@ -58,7 +59,41 @@ def processTrade(inputDir, outputDir):
 
 	except:
 		logger.exception('processTrade():')
-		return (2, '')
+		return (-1, '')
+
+
+
+def processRepo(inputDir, outputDir):
+	"""
+	[String] inputDir, [String] outputDir
+		=> [int] status code, [String] message
+
+	Side effect: 
+	(1) move the input file to another directory if processing successful;
+	(2) produce an output csv file in the output directory;
+
+	status code: 0:successful, 1:warning, -1:error
+	"""
+	logger.debug('processRepo(): {0}'.format(inputDir))
+
+	try:
+		inputFile = getFileFromDirectory(
+						partial(filter, lambda f: f.startswith('REPO') and f.endswith('.xlsx'))
+					  , inputDir
+					)
+
+		outputFile = output( getRepoTrades(fileToLines(join(inputDir, inputFile)))
+						   , getRepoCsvHeaders()
+						   , join(outputDir, 'repoOutput.csv'))
+
+		shutil.move( join(inputDir, inputFile)
+				   , join(inputDir, 'processed', inputFile))
+
+		return (0, 'output repo file: ' + outputFile)
+
+	except:
+		logger.exception('processRepo():')
+		return (-1, '')
 
 
 
@@ -136,23 +171,6 @@ if __name__ == '__main__':
 	3. Move the input file to 'processed' sub directory.
 	"""
 	logger.debug('main:')
-	# try:
-	# 	inputFile = getTradeFileFromDirectory()
-
-	# 	trades, tradesWithMultipleSSI = \
-	# 		getBociTrades(fileToLines(join(getInputDirectory(), inputFile)))
-
-	# 	output(trades, getTradeCsvHeaders(), getOutputDirectory())
-
-		# sendNotification( getTradeWithMultipleSSI(trades)
-		# 				, output(trades, getOutputDirectory()))
-
-	# 	shutil.move( join(getInputDirectory(), inputFile)
-	# 			   , join(getInputDirectory(), 'processed', inputFile))
-
-	# except:
-	# 	logger.exception('main')
-		# sendNotification('Error occurred when converting BOCI-Prudential trade file', '')
-
 
 	print(processTrade(getInputDirectory(), getOutputDirectory()))
+	print(processRepo(getInputDirectory(), getOutputDirectory()))

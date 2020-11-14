@@ -3,7 +3,7 @@
 
 import unittest2
 from boci_trustee.utility import getCurrentDir
-from boci_trustee.repo import getRepoTickets, convert
+from boci_trustee.repo import getRepoTrades
 from utils.excel import fileToLines
 from utils.iter import firstOf
 from os.path import join
@@ -19,7 +19,7 @@ class TestRepo(unittest2.TestCase):
 
 	def test_convert(self):
 		inputFile = join(getCurrentDir(), 'samples', 'sample_repo_trade1.xlsx')
-		trades = list(convert(getRepoTickets(fileToLines(inputFile))))
+		trades = list(getRepoTrades(fileToLines(inputFile)))
 		self.assertEqual(60, len(trades))
 		self.verifyTrade1(firstOf( lambda t: t['Mature_date'] == '04/03/2020' \
 												and t['Col_ISIN'] == 'USY0606WCA63' 

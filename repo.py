@@ -17,31 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 
-def processRepo(lines):
-	"""
-	[Iterator] lines (from Bloomberg THRP Repo trade file)
-		=> ( [String] output csv file
-		   , [String] message subject
-		   , [String] message body
-		   )
-	"""
-	pass
-
-
-
-"""
-	[Iterator] lines (from Bloomberg THRP Repo trade file) 
-		=> [Iterator] repo tickets
-"""
-getRepoTickets = compose(
-	getRawPositions
-  , partial(dropwhile, lambda L: len(L) == 0 or L[0] == '')
-  , skipFirst2Lines
-)
-
-
-
-def convert(tickets):
+def getRepoTrades(lines):
 	"""
 	[Iterator] tickets (Bloomberg REPO tickets) 
 		=> [Iterator] trades (BOCI trustee REPO trades)
@@ -52,9 +28,22 @@ def convert(tickets):
 		toStringIfFloat(tkt['Unadj Term Money']) + tkt['Repo Sta']
 
 
+	"""
+		[Iterator] lines (from Bloomberg THRP Repo trade file) 
+			=> [Iterator] repo tickets
+	"""
+	getRepoTickets = compose(
+		getRawPositions
+	  , partial(dropwhile, lambda L: len(L) == 0 or L[0] == '')
+	  , skipFirst2Lines
+	)
+
+
 	return map( ticketToTrade
 			  , map( groupToTicket
-			  	   , groupbyToolz(groupIdentity, tickets).values()))
+			  	   , groupbyToolz( groupIdentity
+			  	   				 , getRepoTickets(lines)
+			  	   				 ).values()))
 
 
 
@@ -143,3 +132,12 @@ def ticketToTrade(ticket):
 						    , 'Exchange': ''
 						    }
 						  )
+
+
+
+getRepoCsvHeaders = lambda: \
+	[ 'Portfolio_code',	'Txn_type',	'Txn_sub_type',	'Trade_date', 'Settle_date'
+	, 'Mature_date', 'Loan_ccy', 'Amount', 'Eff_date', 'Int_rate', 'Int_mode'
+	, 'Col_ISIN', 'Col_SEDOL', 'Col_Bloomberg',	'Col_LocalCode', 'Col_CMUCode'
+	, 'Col_desc', 'Col_Qty', 'Broker', 'Exchange', 'Cust_ref'
+	]
