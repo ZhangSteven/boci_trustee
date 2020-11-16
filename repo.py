@@ -106,7 +106,8 @@ def ticketToTrade(ticket):
 	t['Settle_date'] = toDateTimeString(ticket['Stl Date']) if t['Txn_sub_type'] == 'Open' \
 						else ''
 	t['Mature_date'] = '' if t['Txn_sub_type'] == 'Change Rate' else \
-						'OPEN' if ticket['Trm Date'] == 'OPEN' else \
+						ticket['Trd Dt'] if t['Txn_sub_type'] == 'Close' else \
+						'31/12/2049' if ticket['Trm Date'] == 'OPEN' else \
 						toDateTimeString(ticket['Trm Date'])
 	t['Loan_ccy'] = '' if t['Txn_sub_type'] == 'Change Rate' else ticket['Crcy']
 	t['Amount'] = '' if t['Txn_sub_type'] == 'Change Rate' else ticket['Loan Amount']
