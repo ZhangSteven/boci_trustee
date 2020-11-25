@@ -22,34 +22,26 @@ logger = logging.getLogger(__name__)
 
 
 
-def processTrade(inputDir, outputDir):
+def processTrade(inputFile, inputDir, outputDir):
 	"""
-	[String] inputDir, [String] outputDir
+	[String] inputFile, [String] inputDir, [String] outputDir
 		=> [int] status code, [String] message
 
 	Side effect: 
 	(1) move the input file to another directory if processing successful;
 	(2) produce an output csv file in the output directory;
 
-	status code: 0:successful, 1:warning, -1:error
+	status code: -1:error, 0:successful, 1:warning
 	"""
-	logger.debug('processTrade(): {0}'.format(inputDir))
+	logger.debug('processTrade(): {0}'.format(inputFile))
 
 	try:
-		inputFile = getFileFromDirectory(
-						partial(filter, lambda f: f.startswith('TD') and f.endswith('.xlsx'))
-					  , inputDir
-					)
-
 		trades, tradesWithMultipleSSI = \
 			getBociTrades(fileToLines(join(inputDir, inputFile)))
 
 		outputFile = output( trades
 						   , getTradeCsvHeaders()
 						   , join(outputDir, changeFileExtension(inputFile)))
-
-		shutil.move( join(inputDir, inputFile)
-				   , join(inputDir, 'processed', inputFile))
 
 		return \
 		(0, 'output trade file: ' + outputFile) \
@@ -65,31 +57,23 @@ def processTrade(inputDir, outputDir):
 
 
 
-def processRepo(inputDir, outputDir):
+def processRepo(inputFile, inputDir, outputDir):
 	"""
-	[String] inputDir, [String] outputDir
+	[String] inputFile, [String] inputDir, [String] outputDir
 		=> [int] status code, [String] message
 
 	Side effect: 
 	(1) move the input file to another directory if processing successful;
 	(2) produce an output csv file in the output directory;
 
-	status code: 0:successful, 1:warning, -1:error
+	status code: -1: error, 0: successful
 	"""
 	logger.debug('processRepo(): {0}'.format(inputDir))
 
 	try:
-		inputFile = getFileFromDirectory(
-						partial(filter, lambda f: f.startswith('REPO') and f.endswith('.xlsx'))
-					  , inputDir
-					)
-
 		outputFile = output( getRepoTrades(fileToLines(join(inputDir, inputFile)))
 						   , getRepoCsvHeaders()
 						   , join(outputDir, changeFileExtension(inputFile)))
-
-		shutil.move( join(inputDir, inputFile)
-				   , join(inputDir, 'processed', inputFile))
 
 		return (0, 'output repo file: ' + outputFile)
 
@@ -99,29 +83,25 @@ def processRepo(inputDir, outputDir):
 
 
 
-def sendNotification(messageTuple1, messageTuple2):
+def sendNotification(fileType, statusCode, message):
 	"""
-	[Tuple] (status code, message)
-	[Tuple] (status code, message)
-	=> no return value
+	[String] fileType
+	[Int] statusCode
+	[String] message
+		=> no return value
 	
 	side effect: send notification email to recipients.
 	"""
-	status01, message01 = messageTuple1
-	status02, message02 = messageTuple2
+	subject = 'Successful: 60001 {0} file conversion'.format(fileType) \
+				if statusCode == 0 else \
+				'Warning: 60001 {0} file conversion, check details below'.format(fileType) \
+				if statusCode == 1 else \
+				'Error: 60001 {0} file conversion'.format(fileType)
 
-	subject = 'Successful: 60001 trade and repo file conversion' \
-				if (status01, status02) == (0, 0) else \
-				'Warning: 60001 trade and repo file conversion: Broker with Muitple SSI' \
-				if (status01, status02) in [(0, 1), (1, 0)] else \
-				'Error: 60001 trade and repo file conversion'
+	sendMail( message, subject, getMailSender(), getMailRecipients()\
+			, getMailServer(), getMailTimeout())
 
-	body = message01 + '\n\n' + message02
-
-	# sendMail( body, subject, getMailSender(), getMailRecipients()\
-	# 		, getMailServer(), getMailTimeout())
-
-	print('send mail:', subject, body) # for debugging only
+	# print('send mail: {0}\n{1}'.format(subject, message)) # for debugging only
 
 
 
@@ -135,31 +115,21 @@ def changeFileExtension(filename):
 
 
 
-
-def checkOnlyOne(L):
-	if len(L) != 1:
-		raise ValueError('should be only one file, but {0} found'.format(len(L)))
-
-	return L
-
-
-
 """
-	[Function] filterFunc
-	[String] directory
-		=> [String] file
-
-	Where filterFunc ([Iterator] => [Iterator]) is a filtering function
-	that filters out the desired file names from a list of file names.
+	[String] input directory
+	[String] file type
+		=> [String] input file
+	
+	Search for the input file based on file type.
 """
-getFileFromDirectory = lambda filterFunc, directory: \
+getInputFiles = lambda inputDir, fileType: \
 compose(
-  	lambda L: L[0]
-  , checkOnlyOne
-  , list
-  , filterFunc
+	list
+  , partial(filter, lambda f: f.startswith('TD') and f.endswith('.xlsx')) \
+	if fileType == 'trade' else \
+	partial(filter, lambda f: f.startswith('REPO') and f.endswith('.xlsx'))
   , getFiles
-)(directory)
+)(inputDir)
 
 
 
@@ -182,14 +152,48 @@ def output(items, headers, outputFile):
 if __name__ == '__main__':
 	import logging.config
 	logging.config.fileConfig('logging.config', disable_existing_loggers=False)
+	
+	import argparse
+	parser = argparse.ArgumentParser(description='Process 60001 THRP File for BOCI-Prudential')
+	parser.add_argument( 'fileType', metavar='file type', type=str
+					   , help='THRP trade file type (trade or repo)')
 
 	"""
-	1. Search for trade and repo file in the input directory;
-	2. Process them and save the results to csv files;
-	3. Send notification email.
+		To handle THRP trade file, do
 
+		$python main.py trade
+
+		To handle THRP repo trade file, do
+
+		$python main.py repo
 	"""
-	logger.debug('main:')
+	import sys
+	fileType = parser.parse_args().fileType
+	
+	if not fileType in ['trade', 'repo']:
+		logger.error('invalid file type: {0}'.format(fileType))
+		sys.exit(1)
 
-	sendNotification( processTrade(getInputDirectory(), getOutputDirectory())
-					, processRepo(getInputDirectory(), getOutputDirectory()))
+	files = getInputFiles(getInputDirectory(), fileType)
+	
+	if len(files) == 0:
+		logger.debug('no input {0} file found'.format(fileType))
+		sys.exit(0)
+
+	elif len(files) > 1:
+		logger.error('{0} files found for {1}'.format(len(files), fileType))
+		sys.exit(1)
+	
+	else:
+		sendNotification( fileType
+						, *processTrade( files[0]
+									   , getInputDirectory()
+									   , getOutputDirectory())) \
+		if fileType == 'trade' else \
+		sendNotification( fileType
+						, *processRepo( files[0]
+									  , getInputDirectory()
+									  , getOutputDirectory()))
+
+		shutil.move( join(getInputDirectory(), files[0])
+				   , join(getInputDirectory(), 'processed', files[0]))
