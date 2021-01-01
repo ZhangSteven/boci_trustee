@@ -22,14 +22,25 @@ logger = logging.getLogger(__name__)
 
 
 
+def processFX(inputFile, inputDir, outputDir):
+	"""
+	[String] inputFile, [String] inputDir, [String] outputDir
+		=> [int] status code, [String] message
+
+	Side effect: produce an output csv file in the output directory;
+
+	status code: -1:error, 0:successful, 1:warning
+	"""
+	return (0, 'fx successful')
+
+
+
 def processTrade(inputFile, inputDir, outputDir):
 	"""
 	[String] inputFile, [String] inputDir, [String] outputDir
 		=> [int] status code, [String] message
 
-	Side effect: 
-	(1) move the input file to another directory if processing successful;
-	(2) produce an output csv file in the output directory;
+	Side effect: produce an output csv file in the output directory;
 
 	status code: -1:error, 0:successful, 1:warning
 	"""
@@ -62,9 +73,7 @@ def processRepo(inputFile, inputDir, outputDir):
 	[String] inputFile, [String] inputDir, [String] outputDir
 		=> [int] status code, [String] message
 
-	Side effect: 
-	(1) move the input file to another directory if processing successful;
-	(2) produce an output csv file in the output directory;
+	Side effect: produce an output csv file in the output directory;
 
 	status code: -1: error, 0: successful
 	"""
@@ -88,7 +97,7 @@ def sendNotification(fileType, statusCode, message):
 	[String] fileType
 	[Int] statusCode
 	[String] message
-		=> no return value
+		=> 0 if successful
 	
 	side effect: send notification email to recipients.
 	"""
@@ -98,10 +107,11 @@ def sendNotification(fileType, statusCode, message):
 				if statusCode == 1 else \
 				'Error: 60001 {0} file conversion'.format(fileType)
 
-	sendMail( message, subject, getMailSender(), getMailRecipients()\
-			, getMailServer(), getMailTimeout())
+	# sendMail( message, subject, getMailSender(), getMailRecipients()\
+	# 		, getMailServer(), getMailTimeout())
 
-	# print('send mail: {0}\n{1}'.format(subject, message)) # for debugging only
+	print('send mail: {0}\n{1}'.format(subject, message)) # for debugging only
+	return 0
 
 
 
@@ -125,9 +135,13 @@ def changeFileExtension(filename):
 getInputFiles = lambda inputDir, fileType: \
 compose(
 	list
+
   , partial(filter, lambda f: f.startswith('TD') and f.endswith('.xlsx')) \
 	if fileType == 'trade' else \
-	partial(filter, lambda f: f.startswith('REPO') and f.endswith('.xlsx'))
+	partial(filter, lambda f: f.startswith('REPO') and f.endswith('.xlsx')) \
+	if fileType == 'repo' else \
+	partial(filter, lambda f: f.startswith('FX') and f.endswith('.xlsx'))
+
   , getFiles
 )(inputDir)
 
@@ -148,15 +162,51 @@ def output(items, headers, outputFile):
 
 
 
+def processFile(handler, fileType, inputFiles, inputDir, outputDir):
+	"""
+	[Function] handler,
+	[String] fileType,
+	[List] inputFiles
+	[String] input directory,
+	[String] output directory
+		=> inputFiles
+	
+	side effect: send notification email about processing result
+	"""
+	getResult = lambda fileType, inputFiles: \
+		(fileType, -1, 'there are more one {0} files'.format(fileType)) \
+		if len(inputFiles) > 1 else \
+		(fileType, *(handler(inputFiles[0], inputDir, outputDir)))
+
+
+	sendNotification(*(getResult(fileType, inputFiles)))
+	return inputFiles
+
+
+
+def moveFiles(inputDir, inputFiles):
+	"""
+	[String] inputDir,
+	[List] inputFiles
+		=> 0 if successful
+	"""
+	for file in inputFiles:
+		logger.debug('moveFiles: {0}'.format(file))
+		shutil.move(join(inputDir, file), join(inputDir, 'processed', file))
+
+	return 0
+
+
+
 
 if __name__ == '__main__':
 	import logging.config
 	logging.config.fileConfig('logging.config', disable_existing_loggers=False)
 	
-	import argparse
-	parser = argparse.ArgumentParser(description='Process 60001 THRP File for BOCI-Prudential')
-	parser.add_argument( 'fileType', metavar='file type', type=str
-					   , help='THRP trade file type (trade or repo)')
+	# import argparse
+	# parser = argparse.ArgumentParser(description='Process 60001 THRP File for BOCI-Prudential')
+	# parser.add_argument( 'fileType', metavar='file type', type=str
+	# 				   , help='THRP trade file type (trade or repo)')
 
 	"""
 		To handle THRP trade file, do
@@ -167,33 +217,49 @@ if __name__ == '__main__':
 
 		$python main.py repo
 	"""
-	import sys
-	fileType = parser.parse_args().fileType
+	# import sys
+	# fileType = parser.parse_args().fileType
 	
-	if not fileType in ['trade', 'repo']:
-		logger.error('invalid file type: {0}'.format(fileType))
-		sys.exit(1)
+	# if not fileType in ['trade', 'repo']:
+	# 	logger.error('invalid file type: {0}'.format(fileType))
+	# 	sys.exit(1)
 
-	files = getInputFiles(getInputDirectory(), fileType)
+	# files = getInputFiles(getInputDirectory(), fileType)
 	
-	if len(files) == 0:
-		logger.debug('no input {0} file found'.format(fileType))
-		sys.exit(0)
+	# if len(files) == 0:
+	# 	logger.debug('no input {0} file found'.format(fileType))
+	# 	sys.exit(0)
 
-	elif len(files) > 1:
-		logger.error('{0} files found for {1}'.format(len(files), fileType))
-		sys.exit(1)
+	# elif len(files) > 1:
+	# 	logger.error('{0} files found for {1}'.format(len(files), fileType))
+	# 	sys.exit(1)
 	
-	else:
-		sendNotification( fileType
-						, *processTrade( files[0]
-									   , getInputDirectory()
-									   , getOutputDirectory())) \
-		if fileType == 'trade' else \
-		sendNotification( fileType
-						, *processRepo( files[0]
-									  , getInputDirectory()
-									  , getOutputDirectory()))
+	# else:
+	# 	sendNotification( fileType
+	# 					, *processTrade( files[0]
+	# 								   , getInputDirectory()
+	# 								   , getOutputDirectory())) \
+	# 	if fileType == 'trade' else \
+	# 	sendNotification( fileType
+	# 					, *processRepo( files[0]
+	# 								  , getInputDirectory()
+	# 								  , getOutputDirectory()))
 
-		shutil.move( join(getInputDirectory(), files[0])
-				   , join(getInputDirectory(), 'processed', files[0]))
+	# 	shutil.move( join(getInputDirectory(), files[0])
+	# 			   , join(getInputDirectory(), 'processed', files[0]))
+
+
+	handlers = { 'trade': processTrade
+			   , 'fx'   : processFX
+			   , 'repo' : processRepo
+			   }
+
+
+	compose(
+		list
+	  , partial(map, partial(moveFiles, getInputDirectory()))
+	  , partial(map, lambda t: processFile(*t))
+	  , partial(map, lambda t: (handlers[t[0]], t[0], t[1], getInputDirectory(), getOutputDirectory()))
+	  , partial(filter, lambda t: len(t[1]) > 0)
+	  , partial(map, lambda fileType: (fileType, getInputFiles(getInputDirectory(), fileType)))
+	)(('trade', 'fx', 'repo'))
