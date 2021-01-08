@@ -107,10 +107,10 @@ def sendNotification(fileType, statusCode, message):
 				if statusCode == 1 else \
 				'Error: 60001 {0} file conversion'.format(fileType)
 
-	# sendMail( message, subject, getMailSender(), getMailRecipients()\
-	# 		, getMailServer(), getMailTimeout())
+	sendMail( message, subject, getMailSender(), getMailRecipients()\
+			, getMailServer(), getMailTimeout())
 
-	print('send mail: {0}\n{1}'.format(subject, message)) # for debugging only
+	# print('send mail: {0}\n{1}'.format(subject, message)) # for debugging only
 	return 0
 
 
