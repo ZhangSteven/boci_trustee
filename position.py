@@ -9,6 +9,7 @@ from steven_utils.utility import writeCsv
 from stbf.valuation_report import getValuationDataFromFile
 from functools import partial
 from itertools import chain
+from os.path import join
 import logging
 logger = logging.getLogger(__name__)
 
