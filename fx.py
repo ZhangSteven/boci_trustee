@@ -6,8 +6,8 @@
 from boci_trustee.trade import toDateTimeString, toStringIfFloat \
 							, skipFirst2Lines, getAccountNumber
 from clamc_datafeed.feeder import mergeDictionary
-from utils.iter import firstOf
-from utils.excel import getRawPositions
+from steven_utils.iter import firstOf
+from steven_utils.excel import getRawPositionsFromLines
 from toolz.itertoolz import groupby as groupbyToolz
 from toolz.functoolz import compose
 from functools import partial
@@ -33,7 +33,7 @@ def getRepoTrades(lines):
 			=> [Iterator] repo tickets
 	"""
 	getRepoTickets = compose(
-		getRawPositions
+		getRawPositionsFromLines
 	  , partial(dropwhile, lambda L: len(L) == 0 or L[0] == '')
 	  , skipFirst2Lines
 	)

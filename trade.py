@@ -7,9 +7,9 @@ from boci_trustee.utility import getBrokerSSIFile, getCurrentDir
 from toolz.functoolz import compose
 from functools import partial, lru_cache
 from itertools import dropwhile
-from utils.utility import fromExcelOrdinal
-from utils.excel import fileToLines, getRawPositions
-from utils.iter import pop
+from steven_utils.excel import fromExcelOrdinal, fileToLines \
+							, getRawPositionsFromLines
+from steven_utils.iter import skipN
 from os.path import join
 import shutil
 import logging
@@ -134,16 +134,11 @@ def loadBrokerSSIMappingFromFile(file):
 	[String] broker SSI mapping file 
 		=> [List] (sub broker ID, broker SSI)
 	"""
-	def skipOneLine(lines):
-		pop(lines)
-		return lines
-
-
 	return \
 	compose(
 		list
 	  , partial(map, lambda line: (line[0].strip(), toStringIfFloat(line[-1])))
-	  , skipOneLine
+	  , partial(skipN, 1)
 	  , fileToLines
   	  , partial(join, getCurrentDir(), 'reference')
 	)(file)
@@ -164,21 +159,14 @@ def getTradeWithMultipleSSI(trades):
 
 
 
-def skipFirst2Lines(lines):
-	pop(lines)
-	pop(lines)
-	return lines
-
-
-
 """
 	[Iterator] lines => [Iterator] boci trades
 """
 convert = compose(
 	partial(map, bociTrade)
-  , getRawPositions
+  , getRawPositionsFromLines
   , partial(dropwhile, lambda L: len(L) == 0 or L[0] == '')
-  , skipFirst2Lines
+  , partial(skipN, 2)
 )
 
 

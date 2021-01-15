@@ -4,10 +4,11 @@
 # format.
 # 
 from boci_trustee.trade import toDateTimeString, toStringIfFloat \
-							, skipFirst2Lines, getAccountNumber
+							, getAccountNumber
 from clamc_datafeed.feeder import mergeDictionary
 from utils.iter import firstOf
 from utils.excel import getRawPositions
+from steven_utils.iter import skipN
 from toolz.itertoolz import groupby as groupbyToolz
 from toolz.functoolz import compose
 from functools import partial
@@ -35,7 +36,7 @@ def getRepoTrades(lines):
 	getRepoTickets = compose(
 		getRawPositions
 	  , partial(dropwhile, lambda L: len(L) == 0 or L[0] == '')
-	  , skipFirst2Lines
+	  , partial(skipN, 2)
 	)
 
 

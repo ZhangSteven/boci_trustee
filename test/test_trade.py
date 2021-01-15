@@ -4,7 +4,7 @@
 import unittest2
 from boci_trustee.utility import getCurrentDir
 from boci_trustee.main import getBociTrades
-from utils.excel import fileToLines
+from steven_utils.excel import fileToLines
 from os.path import join
 
 

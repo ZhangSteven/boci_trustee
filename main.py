@@ -10,11 +10,10 @@ from boci_trustee.trade import getBociTrades, getTradeCsvHeaders
 from boci_trustee.repo import getRepoTrades, getRepoCsvHeaders
 from toolz.functoolz import compose
 from functools import partial
-from utils.file import getFiles
-from utils.mail import sendMail
-from utils.utility import writeCsv
-from utils.excel import fileToLines
-from utils.iter import pop
+from steven_utils.file import getFiles
+from steven_utils.mail import sendMail
+from steven_utils.utility import writeCsv
+from steven_utils.excel import fileToLines
 from os.path import join
 import shutil
 import logging
