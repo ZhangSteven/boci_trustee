@@ -14,8 +14,9 @@ logger = logging.getLogger(__name__)
 
 
 
-def processValuationFile(file):
+def processValuationFile(outputDir, file):
 	"""
+	[String] output directory,
 	[String] file 
 		=> [Tuple] ( [String] cash recon file
 				   , [String] position recon file
@@ -26,8 +27,9 @@ def processValuationFile(file):
 	date, _, _, bondPositions, cashPositions = \
 		getValuationDataFromFile(file)
 
-	return ( createCashReconFile(getParentFolder(file), date, cashPositions)
-		   , createPositionReconFile(getParentFolder(file), date, bondPositions))
+	return \
+	( createCashReconFile(outputDir, getParentFolder(file), date, cashPositions)
+	, createPositionReconFile(outputDir, getParentFolder(file), date, bondPositions))
 
 
 
@@ -110,9 +112,12 @@ getParentFolder = compose(
 	
 
 
-def createCashReconFile(prefix, date, cashPositions):
+def createCashReconFile(outputDir, prefix, date, cashPositions):
 	"""
-	[String] prefix, [String] date, [Iterable] cash positions
+	[String] output directory,
+	[String] prefix,
+	[String] date, 
+	[Iterable] cash positions
 		=> [String] cash reconciliation file name
 
 	Side effect: write a csv file
@@ -120,7 +125,7 @@ def createCashReconFile(prefix, date, cashPositions):
 	return \
 	compose(
 		lambda values: \
-			writeCsv( prefix + '_cash_' + date + '.csv'
+			writeCsv( join(outputDir, prefix + '_cash_' + date + '.csv')
 					, chain([getCashReconFields()], values)
 					, delimiter='|'
 					)
@@ -130,9 +135,12 @@ def createCashReconFile(prefix, date, cashPositions):
 
 
 
-def createPositionReconFile(prefix, date, bondPositions):
+def createPositionReconFile(outputDir, prefix, date, bondPositions):
 	"""
-	[String] prefix, [String] date, [Iterable] bond positions
+	[String] output directory,
+	[String] prefix, 
+	[String] date, 
+	[Iterable] bond positions
 		=> [String] holding reconciliation file name
 
 	Side effect: write a csv file
@@ -140,7 +148,7 @@ def createPositionReconFile(prefix, date, bondPositions):
 	return \
 	compose(
 		lambda values: \
-			writeCsv( prefix + '_position_' + date + '.csv'
+			writeCsv( join(outputDir, prefix + '_position_' + date + '.csv')
 					, chain([getPositionReconFields()], values)
 					, delimiter='|'
 					)
