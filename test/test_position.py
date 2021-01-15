@@ -3,7 +3,9 @@
 
 import unittest2
 from boci_trustee.utility import getCurrentDir
-from boci_trustee.position import processValuationFile
+from boci_trustee.position import getValuationDataFromFile \
+								, cashReconPosition, bondReconPosition
+from functools import partial
 from os.path import join
 
 
@@ -15,41 +17,41 @@ class TestPosition(unittest2.TestCase):
 
 
 
-	def testProcessValuationFile(self):
+	def testCashReconPosition(self):
 		inputFile = join(getCurrentDir(), 'samples', 'sample 2021-01-12.xls')
-		processValuationFile(inputFile)
+		date, _, _, bondPositions, cashPositions = \
+			getValuationDataFromFile(inputFile)
+
+		cashReconPositions = list(map( partial(cashReconPosition, date)
+									 , cashPositions))
+		bondReconPositions = list(map( partial(bondReconPosition, date)
+									 , bondPositions))
+		self.assertEqual(1, len(cashReconPositions))
+		self.assertEqual(15, len(bondReconPositions))
+		self.verifyCashReconPosition(cashReconPositions[0])
+		self.verifyBondReconPosition(bondReconPositions[14])
 
 
 
-	# def testCashPosition(self):
-	# 	inputFile = join(getCurrentDir(), 'samples', 'sample 2021-01-12.xls')
-	# 	trades, _ = getBociTrades(fileToLines(inputFile))
-	# 	t = list(trades)[1]
-	# 	self.assertEqual('12345678', t['Account'])
-	# 	self.assertEqual('BK5JS96', t['SEDOL'])
-	# 	self.assertEqual('XS1813551584', t['ISIN'])
-	# 	self.assertEqual('HOPSON DEVELOP', t['Name'])
-	# 	self.assertEqual('S', t['TranType'])
-	# 	self.assertEqual(1996000, t['Quantity'])
-	# 	self.assertEqual('07/10/2020', t['TradeDate'])
-	# 	self.assertEqual('09/10/2020', t['SettlementDate'])
-	# 	self.assertEqual('USD', t['Currency'])
-	# 	self.assertEqual(100.58, t['Price'])
-	# 	self.assertEqual(42415, t['AccurredInterest'])
-	# 	self.assertEqual(2049991.80, t['SettlementAmount'])
-	# 	self.assertEqual(0, t['Commission'])
-	# 	self.assertEqual('', t['StampDuty'])
-	# 	self.assertEqual('', t['TransactionLevy'])
-	# 	self.assertEqual('', t['ClearingFee'])
-	# 	self.assertEqual('', t['SalesTax'])
-	# 	self.assertEqual('', t['HongKongCCASSFee'])
-	# 	self.assertEqual('281305', t['TradeReferenceNumber'])
-	# 	self.assertEqual('94589', t['BrokerCode'])
-	# 	self.assertEqual('GOLDMAN SACHS', t['BrokerName'])
+	def verifyCashReconPosition(self, position):
+		self.assertEqual(5, len(position))
+		self.assertEqual('Short Term Bond Fund', position['portfolio'])
+		self.assertEqual('', position['custodian'])
+		self.assertEqual('2021-01-12', position['date'])
+		self.assertEqual('USD', position['currency'])
+		self.assertEqual(70831279.39, position['balance'])
 
 
 
-	# def testTrade2(self):
-	# 	inputFile = join(getCurrentDir(), 'samples', 'sample_trade2.xlsx')
-	# 	_, tradesWithMultipleSSI = getBociTrades(fileToLines(inputFile))
-	# 	self.assertEqual(['281305', '282617', '283003'], tradesWithMultipleSSI)
+	def verifyBondReconPosition(self, position):
+		self.assertEqual(9, len(position))
+		self.assertEqual('Short Term Bond Fund', position['portfolio'])
+		self.assertEqual('', position['custodian'])
+		self.assertEqual('2021-01-12', position['date'])
+		self.assertEqual('', position['geneva_investment_id'])
+		self.assertEqual('USG8850LAB65', position['ISIN'])
+		self.assertEqual('', position['bloomberg_figi'])
+		self.assertEqual( 'THREE GORGES FINANCE I CAYMAN ISLANDS LTD 2.3% S/A 02JUN2021 REGS'
+						, position['name'])
+		self.assertEqual('USD', position['currency'])
+		self.assertEqual(6275000, position['quantity'])

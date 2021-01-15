@@ -14,17 +14,6 @@ logger = logging.getLogger(__name__)
 
 
 
-"""
-1. read valuation report from boci trustee, get data;
-
-2. convert cash data to cash recon file;
-
-3. combine fixed deposit, bond data and convert to position recon file;
-
-4. return cash file, position file.
-
-"""
-
 def processValuationFile(file):
 	"""
 	[String] file 
@@ -72,7 +61,7 @@ cashReconPosition = lambda date, position: \
 	, 'currency': position['DEAL CCY']
 	, 'balance': position['ORIG CURR BOOK COST']
 	}
-				
+
 
 
 """
