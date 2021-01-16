@@ -8,6 +8,7 @@ from boci_trustee.utility import getInputDirectory, getOutputDirectory\
 						, getMailTimeout, getCurrentDir
 from boci_trustee.trade import getBociTrades, getTradeCsvHeaders
 from boci_trustee.repo import getRepoTrades, getRepoCsvHeaders
+from boci_trustee.fx import getFXTrades, getFXCsvHeaders
 from toolz.functoolz import compose
 from functools import partial
 from steven_utils.file import getFiles
@@ -30,7 +31,18 @@ def processFX(inputFile, inputDir, outputDir):
 
 	status code: -1:error, 0:successful, 1:warning
 	"""
-	return (0, 'fx successful')
+	logger.debug('processFX(): {0}'.format(inputDir))
+
+	try:
+		outputFile = output( getFXTrades(fileToLines(join(inputDir, inputFile)))
+						   , getFXCsvHeaders()
+						   , join(outputDir, changeFileExtension(inputFile)))
+
+		return (0, 'output fx file: ' + outputFile)
+
+	except:
+		logger.exception('processRepo():')
+		return (-1, '')
 
 
 

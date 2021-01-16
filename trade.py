@@ -162,12 +162,13 @@ def getTradeWithMultipleSSI(trades):
 """
 	[Iterator] lines => [Iterator] boci trades
 """
-convert = compose(
-	partial(map, bociTrade)
+convert = lambda mappingFunc, lines: \
+compose(
+	partial(map, mappingFunc)
   , getRawPositionsFromLines
   , partial(dropwhile, lambda L: len(L) == 0 or L[0] == '')
   , partial(skipN, 2)
-)
+)(lines)
 
 
 
@@ -177,7 +178,7 @@ convert = compose(
 getBociTrades = compose(
 	lambda L: (L, getTradeWithMultipleSSI(L))
   , list
-  , convert
+  , partial(convert, bociTrade)
 )
 
 
