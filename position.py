@@ -126,7 +126,7 @@ def createCashReconFile(outputDir, prefix, date, cashPositions):
 	return \
 	compose(
 		lambda values: \
-			writeCsv( join(outputDir, prefix + '_cash_' + date + '.csv')
+			writeCsv( join(outputDir, prefix + '_' + date + '_cash.csv')
 					, chain([getCashReconFields()], values)
 					, delimiter='|'
 					)
@@ -149,7 +149,7 @@ def createPositionReconFile(outputDir, prefix, date, bondPositions):
 	return \
 	compose(
 		lambda values: \
-			writeCsv( join(outputDir, prefix + '_position_' + date + '.csv')
+			writeCsv( join(outputDir, prefix + '_' + date + '_position.csv')
 					, chain([getPositionReconFields()], values)
 					, delimiter='|'
 					)
