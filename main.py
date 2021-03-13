@@ -7,7 +7,7 @@ from boci_trustee.utility import getInputDirectory, getOutputDirectory\
 						, getMailSender, getMailRecipients, getMailServer\
 						, getMailTimeout, getCurrentDir
 from boci_trustee.trade import getBociTrades, getTradeCsvHeaders
-from boci_trustee.repo import getRepoTrades, getRepoCsvHeaders
+from boci_trustee.OLD_repo import getRepoTrades, getRepoCsvHeaders
 from boci_trustee.fx import getFXTrades, getFXCsvHeaders
 from toolz.functoolz import compose
 from functools import partial

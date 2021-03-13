@@ -3,7 +3,7 @@
 
 import unittest2
 from boci_trustee.utility import getCurrentDir
-from boci_trustee.repo import getRepoTrades
+from boci_trustee.OLD_repo import getRepoTrades
 from steven_utils.excel import fileToLines
 from steven_utils.iter import firstOf
 from os.path import join
