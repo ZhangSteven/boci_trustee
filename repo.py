@@ -173,8 +173,16 @@ getAccountNumber = lambda accountCode: \
 
 
 
+"""
+	[String] transaction type => [String] BOCI repo type
+	
+	Bloomberg AIM's reverse repo is borrowing money from counterparty, 
+	mapping to BOCI's REPO type, while Bloomberg's repo is lending money
+	to counterparty, mapping to BOCK's REVERSE REPO
+"""
 getRepoType = lambda transactionType: \
-	'REPO' if transactionType == 'ReverseRepo_InsertUpdate' else 'REPO'
+	'REPO' if transactionType == 'ReverseRepo_InsertUpdate' else \
+	'REVERSE REPO'
 
 
 
@@ -298,6 +306,9 @@ def bociClose(oldRepoTrade, currentRepoTrade, closeInfo):
 def bociCancel(cancelInfo):
 	"""
 	[Dictionary] repo cancel trade data => [Dictionary] boci repo cancel data
+	
+	We need to switch to manuall processing if there are any cancel 
+	trades.
 	"""
 	return {}
 
