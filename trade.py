@@ -100,29 +100,29 @@ def bociTrade(blpTrade):
 	must change the logic here.
 	"""
 	return \
-	{ 'Account': getAccountNumber(toStringIfFloat(blpTrade['Fund']))
-	, 'SEDOL': blpTrade['Sedol']
-	, 'ISIN': blpTrade['ISIN']
-	, 'Name': blpTrade['Shrt Name']
-	, 'TranType': blpTrade['B/S']
-	, 'Quantity': blpTrade['Amount Pennies']
-	, 'TradeDate': toDateTimeString(blpTrade['As of Dt'])
-	, 'SettlementDate': toDateTimeString(blpTrade['Stl Date'])
-	, 'Currency': blpTrade['VCurr']
-	, 'Price': blpTrade['Price']
-	, 'AccurredInterest': blpTrade['Accr Int']
-	, 'SettlementAmount': blpTrade['Settle Amount']
+	{ 'Account': getAccountNumber(toStringIfFloat(blpTrade['Trader Name']))
+	, 'SEDOL': blpTrade['Sedol1 Number']
+	, 'ISIN': blpTrade['ISIN Number']
+	, 'Name': blpTrade['Short Name']
+	, 'TranType': blpTrade['Buy/Sell']
+	, 'Quantity': blpTrade['Amount (Pennies)']
+	, 'TradeDate': toDateTimeString(blpTrade['As of Date'])
+	, 'SettlementDate': toDateTimeString(blpTrade['Settlement Date'])
+	, 'Currency': blpTrade['View in Currency']
+	, 'Price': blpTrade['Trade price']
+	, 'AccurredInterest': blpTrade['Accrued Interest']
+	, 'SettlementAmount': blpTrade['Settlement Total in Settlemen']
 	, 'Commission': 0
 	, 'StampDuty': ''
 	, 'TransactionLevy': ''
 	, 'ClearingFee': ''
 	, 'SalesTax': ''
 	, 'HongKongCCASSFee': ''
-	, 'TradeReferenceNumber': toStringIfFloat(blpTrade['Tkt #'])
-	, 'BrokerCode': getBrokerCode(blpTrade['FACC Short Name'])
-	, 'BrokerName': blpTrade['FACC Long Name']
+	, 'TradeReferenceNumber': toStringIfFloat(blpTrade['Ticket Number'])
+	, 'BrokerCode': getBrokerCode(blpTrade['Firm Account Short Name'])
+	, 'BrokerName': blpTrade['Firm Account Short Name']
 
-	, 'BrokerShortName': blpTrade['FACC Short Name'] # to detect multiple SSI
+	, 'BrokerShortName': blpTrade['Firm Account Short Name'] # to detect multiple SSI
 													 # not for output to BOCI
 	}
 
